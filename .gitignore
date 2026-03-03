@@ -1,0 +1,45 @@
+# --- Python Virtual Environments ---
+.venv/
+venv/
+ENV/
+env/
+bin/
+include/
+lib/
+share/
+pyvenv.cfg
+
+# --- Python Cache & Compiled Files ---
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipyn_cache/
+
+# --- IDE & Editors ---
+# PyCharm
+.idea/
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+*.code-workspace
+
+# --- Environment Variables (Kunci API/Rahasia) ---
+.env
+.flaskenv
+
+# --- Distribusi & Packaging ---
+dist/
+build/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# --- System Files ---
+.DS_Store
+Thumbs.db

@@ -1,0 +1,4 @@
+Date,Time,Device ID,Account Name,Platform,URL,Status,Duration (sec),Error
+2026-03-03,15:03:45,SN12345,@user_pro,snackvideo,https://s.snackvideo.com/p/t8e1NdTD,SUCCESS,63.9,
+2026-03-03,15:03:45,SN67890,Unknown,facebook,https://fb.com/xxx,FAILED,12.1,Timeout
+2026-03-03,15:08:10,JVEQGYCUX8JZU8PR,1336wahyusanja,snackvideo,https://s.snackvideo.com/p/t8e1NdTD,SUCCESS,63.58,

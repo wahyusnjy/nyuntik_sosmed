@@ -1,0 +1,25 @@
+{
+  "comments": [
+    "Makanya sebelum koar koar cek dulu, konten-konten yang sebelah bisa banget giringnya",
+    "Faktanya, beasiswa & hak guru tetap prioritas utama. Hoaks pemotongan anggaran harus diluruskan!",
+    "Transparansi anggaran MBG penting banget. Ternyata justru melengkapi tugas pendidik, bukan menggantinya.",
+    "Jangan mudah termakan isu miring. Pemerintah sudah pastikan anggaran pendidikan tetap aman.",
+    "Jujur awalnya sempat denger isu nggak enak soal potong gaji guru, tapi pas baca ini jadi paham ternyata hoaks. Syukur deh, aman semua.",
+    "Sebagai orang tua, saya cuma mau yang terbaik buat anak. Ternyata anggarannya emang nggak ganggu hak guru ya, malah nambah fasilitas buat anak kita.",
+    "Gak usah gampang kemakan isu miring lah, mending kita pantau bareng-bareng supaya programnya awet dan tepat sasaran."
+  ],
+  "accounts": {
+    "instagram": ["User_IG_1", "User_IG_2", "User_IG_3"],
+    "threads": ["User_TH_1", "User_TH_2", "User_TH_3"],
+    "youtube": ["User_YT_1", "User_YT_2", "User_YT_3"],
+    "snackvideo": ["User_SV_1", "User_SV_2", "User_SV_3"]
+  },
+  "settings": {
+    "sleep_min": 2,
+    "sleep_max": 5,
+    "timeout": 15,
+    "comment_timeout": 20,
+    "max_retries": 3,
+    "click_offset_range": 5
+  }
+}
