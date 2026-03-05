@@ -109,11 +109,9 @@ def do_comment(d: u2.Device) -> bool:
         comment_btn = find_element(d, _CFG["comment_id"], timeout=1)
         if comment_btn is None:
             print(f"    [FB-Comment] Comment btn found...")
-            for btn_desc in ["Comment", "Comment button","comments"]:
-                btn = d(description=btn_desc)
-                if btn.exists:
-                    comment_btn = btn
-                    break
+            btn = d(descriptionContains="comment")
+            if btn.exists:
+                comment_btn = btn
 
         if comment_btn is not None:
             human_click(d, comment_btn)
