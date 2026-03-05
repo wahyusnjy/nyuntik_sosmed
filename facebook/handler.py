@@ -105,22 +105,10 @@ def do_comment(d: u2.Device) -> bool:
     while True:
         attempts += 1
 
-        # ── Coba langsung klik placeholder input (sering muncul sebelum tombol) ──
-        for input_desc in ["Write a comment…", "Write a comment...", "Write a public comment…"]:
-            box = d(description=input_desc)
-            if box.exists:
-                _type_and_send(d, box, comment_text)
-                return True
-
-        # ── Cari via resourceId composer ───────────────────────────────────
-        box = find_element(d, _CFG["comment_box_id"], timeout=1)
-        if box is not None:
-            _type_and_send(d, box, comment_text)
-            return True
-
         # ── Cari tombol Comment → klik → cari box ──────────────────────────
         comment_btn = find_element(d, _CFG["comment_id"], timeout=1)
         if comment_btn is None:
+            print(f"    [FB-Comment] Comment btn found...")
             for btn_desc in ["Comment", "Comment button","comments"]:
                 btn = d(description=btn_desc)
                 if btn.exists:
