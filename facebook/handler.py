@@ -42,10 +42,19 @@ def do_like(d: u2.Device) -> bool:
     while True:
         attempts += 1
 
+        likeBtn = d(descriptionContains=_LIKED_DESC)
         # ── Sudah di-like? ──────────────────────────────────────────────────
-        if d(descriptionContains=_LIKED_DESC).exists:
-            print(f"    [FB-Like] Sudah di-like, skip.")
-            return True
+        if likeBtn.exists:
+            is_selected = likeBtn.info.get('selected')
+    
+            if is_selected:
+                print(f"    [FB-Like] Sudah di-like, skip.")
+                return True
+            else:
+                likeBtn.click()
+                print(f"    [FB-Like] ADA TAPI BELUM  di-like, Perform like.")
+                return True
+
         for skip_desc in ["Remove Like", "Remove like", "Unlike","reactions"]:
             if d(descriptionContains=skip_desc).exists:
                 print(f"    [FB-Like] Sudah di-like ({skip_desc}), skip.")
