@@ -24,9 +24,10 @@ _CFG = PLATFORM_CONFIG["facebook"]
 MAX_SCROLL_ATTEMPTS = 20
 
 # Description persis tombol Like Facebook (belum di-like)
-_LIKE_DESC   = "Like button. Double tap and hold to react to the comment."
+_LIKE_DESC   = ["Like", "reaction"]
+
 # Description saat sudah di-like (FB ubah dari "Like" → "Liked")
-_LIKED_DESC  = "Liked button. Double tap and hold to react to the comment."
+_LIKED_DESC  = "reaction"
 
 
 # ─── Like ─────────────────────────────────────────────────────────────────────
@@ -42,21 +43,22 @@ def do_like(d: u2.Device) -> bool:
         attempts += 1
 
         # ── Sudah di-like? ──────────────────────────────────────────────────
-        if d(description=_LIKED_DESC).exists:
+        if d(descriptionContains=_LIKED_DESC).exists:
             print(f"    [FB-Like] Sudah di-like, skip.")
             return True
-        for skip_desc in ["Remove Like", "Remove like", "Unlike"]:
-            if d(description=skip_desc).exists:
+        for skip_desc in ["Remove Like", "Remove like", "Unlike","reactions"]:
+            if d(descriptionContains=skip_desc).exists:
                 print(f"    [FB-Like] Sudah di-like ({skip_desc}), skip.")
                 return True
 
         # ── Tombol Like (belum di-like) ─────────────────────────────────────
-        like_el = d(description=_LIKE_DESC)
-        if like_el.exists:
-            human_click(d, like_el)
-            print(f"    [FB-Like] ✓ Like berhasil (scroll ke-{attempts})")
-            human_sleep()
-            return True
+        for like_desc in _LIKE_DESC: 
+            like_el = d(descriptionContains=like_desc)
+            if d(descriptionContains=like_desc).exists:
+                human_click(d, like_el)
+                print(f"    [FB-Like] ✓ Like berhasil (scroll ke-{attempts})")
+                human_sleep()
+                return True
 
         # Fallback: cari via descriptionContains (partial) atau resourceId
         like_el = find_element(d, _CFG["like_id"], timeout=1)

@@ -1,0 +1,9 @@
+Date,Time,Device ID,Account Name,Platform,URL,Status,Duration (sec),Error
+2026-03-04,11:15:48,R9RY100MVHT,Unknown,instagram,https://www.instagram.com/reel/DVQtt-0ExMG/?igsh=OXh4MWRkOHU3b3d6,FAILED,59.26,name '_CFG' is not defined
+2026-03-04,11:17:28,R9RY100MVHT,Unknown,instagram,https://www.instagram.com/reel/DVQtt-0ExMG/?igsh=OXh4MWRkOHU3b3d6,FAILED,71.16,broadcast ADB_KEYBOARD_CLEAR_TEXT failed: None
+2026-03-04,11:21:18,R9RY100MVHT,Unknown,instagram,https://www.instagram.com/reel/DVQtt-0ExMG/?igsh=OXh4MWRkOHU3b3d6,FAILED,78.17,name '_CFG' is not defined
+2026-03-04,11:39:22,R9RY100MVHT,Unknown,instagram,https://www.instagram.com/reel/DVQtt-0ExMG/?igsh=OXh4MWRkOHU3b3d6,FAILED,62.84,name '_CFG' is not defined
+2026-03-04,12:00:16,R9RY100MVHT,Unknown,instagram,https://www.instagram.com/reel/DVQtt-0ExMG/?igsh=OXh4MWRkOHU3b3d6,FAILED,59.72,name '_CFG' is not defined
+2026-03-04,12:40:50,R9RY100MVHT,Unknown,instagram,https://www.instagram.com/reel/DVQtt-0ExMG/?igsh=OXh4MWRkOHU3b3d6,FAILED,58.18,name '_CFG' is not defined
+2026-03-04,13:16:33,R9RY100MVHT,Unknown,instagram,https://www.instagram.com/reel/DVQtt-0ExMG/?igsh=OXh4MWRkOHU3b3d6,FAILED,58.94,name '_CFG' is not defined
+2026-03-04,13:43:39,R9RY100MVHT,Unknown,snackvideo,https://s.snackvideo.com/p/t8e1NdTD,PARTIAL,101.7,Like/Comment gagal

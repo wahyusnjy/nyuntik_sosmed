@@ -100,7 +100,16 @@ def process_device(serial: str, platform: str, url: str) -> list[dict]:
             clear_recent_apps(d, cfg["package"])
             human_sleep(1, 2)
 
-            # 1. Buka URL
+            # 1a. PRE-hook: buka app → profil → ambil username SEBELUM ke post
+            #     Dipakai oleh Instagram (open app → navigate profile → get username)
+            #     Handler yang mendukung: wajib punya fungsi pre_open_url(d) -> str
+            if hasattr(handler, "pre_open_url"):
+                print(f"  [PRE] Mengambil username akun aktif...")
+                current_account = handler.pre_open_url(d)
+                print(f"  [INFO] Akun aktif: {current_account}")
+                human_sleep(1, 2)
+
+            # 1b. Buka URL target via Intent
             print(f"  [1/4] Membuka URL di {platform}...")
             if not open_url(d, platform, url):
                 raise RuntimeError("Gagal membuka URL")
@@ -115,18 +124,18 @@ def process_device(serial: str, platform: str, url: str) -> list[dict]:
             print(f"  [3/4] Proses Comment...")
             comment_ok = handler.do_comment(d)
 
-            # 4. Post-action (optional per-platform)
-            #    SnackVideo: back dari stream → navigasi ke profil
+            # 4. POST-hook (opsional): SnackVideo close → buka ulang → ke profil
             if hasattr(handler, "after_action"):
                 print(f"  [POST] Menjalankan post-action...")
                 handler.after_action(d)
 
-            # 5. Ambil username — gunakan get_username handler jika ada, else generic
-            if hasattr(handler, "get_username"):
-                current_account = handler.get_username(d)
-            else:
-                current_account = get_current_username(d, platform)
-            print(f"  [INFO] Akun aktif: {current_account}")
+            # 5. Ambil username (jika belum diambil di PRE-hook)
+            if current_account == "Unknown":
+                if hasattr(handler, "get_username"):
+                    current_account = handler.get_username(d)
+                else:
+                    current_account = get_current_username(d, platform)
+                print(f"  [INFO] Akun aktif: {current_account}")
 
             end_time = time.time()
             status   = "SUCCESS" if (like_ok or comment_ok) else "PARTIAL"

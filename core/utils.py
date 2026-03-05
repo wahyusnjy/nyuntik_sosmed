@@ -43,6 +43,17 @@ def find_element(d: u2.Device, resource_id: str, timeout: int = None):
         pass
     return None
 
+def find_by_xpath(d: u2.Device, xpath: str, timeout: int = None):
+    """Cari elemen by xpath, return element atau None."""
+    t = timeout or TIMEOUT
+    try:
+        el = d.xpath(xpath)
+        if el.wait(timeout=t):
+            return el
+    except Exception:
+        pass
+    return None
+
 
 def find_by_desc(d: u2.Device, desc: str, timeout: int = None):
     """Cari elemen by content-description."""
@@ -55,23 +66,52 @@ def find_by_desc(d: u2.Device, desc: str, timeout: int = None):
         pass
     return None
 
+def find_by_desc_contains(d: u2.Device, desc: str, timeout: int = None):
+    """Cari elemen by content-description."""
+    t = timeout or TIMEOUT
+    try:
+        el = d(descriptionContains=desc)
+        if el.wait(timeout=t):
+            return el
+    except Exception:
+        pass
+    return None
+
 
 def get_random_comment() -> str:
     return random.choice(COMMENTS)
 
 
 def get_current_username(d: u2.Device, platform: str) -> str:
-    """Ambil username akun aktif dari layar profil."""
+    """Ambil username akun aktif dari layar profil (generic)."""
     cfg = PLATFORM_CONFIG[platform]
+    print(f"     Closing apps {platform}...")
+    clear_recent_apps(d, cfg["package"])
+    human_sleep(1, 2)
+
+    print(f"     Membuka Ulang {platform}...")
+    d.app_start(cfg["package"])
+    human_sleep(2, 4)
     try:
         profile_tab = find_element(d, cfg["profile_tab_id"], timeout=5)
+        alternative_profile_tab = find_by_desc_contains(d, cfg["profile_tab_id"], timeout=5)
         if profile_tab:
+            print(f"     Find tab profile  on primary tab...")
             human_click(d, profile_tab)
+            human_sleep(1.5, 3)
+        elif alternative_profile_tab :
+            print(f"     Find tab profile on alternative 1 ...")
+            human_click(d, alternative_profile_tab)
             human_sleep(1.5, 3)
 
         username_el = find_element(d, cfg.get("switch_acc_id"), timeout=5)
+        username_el_xpath = find_by_xpath(d, cfg.get("switch_acc_id"), timeout=5)
         if username_el:
-            return username_el.get_text() or "Unknown"
+            print(f"     Find username on primary 1 tab...")
+            return username_el.get_text()
+        elif username_el_xpath: 
+            print(f"     Find username on alternative 1 tab...")
+            return username_el_xpath.get_text() or username_el_xpath.get("contentDescription") or "Unknown"
     except Exception:
         pass
     return "Unknown"
@@ -115,7 +155,7 @@ def do_switch_account(d: u2.Device, platform: str) -> bool:
 
         switch_btn = find_element(d, cfg["switch_acc_id"], timeout=5)
         if switch_btn is None:
-            switch_btn = find_by_desc(d, "Switch accounts")
+            switch_btn = find_by_xpath(d,cfg["switch_acc_xpath"], timeout=5)
 
         if switch_btn:
             human_click(d, switch_btn)
@@ -127,14 +167,50 @@ def do_switch_account(d: u2.Device, platform: str) -> bool:
                     resourceId="com.instagram.android:id/row_user_header_username"
                 )
 
+            # IG
             all_accounts = d(
                 resourceId="com.instagram.android:id/row_user_header_username"
             )
+            # Facebook
+            other_account = find_by_desc_contains(d,"Other accounts",timeout=5)
             if all_accounts.count >= 2:
                 human_click(d, all_accounts[1])
                 human_sleep(3, 5)
                 print(f"    [Switch] ✓ Akun berhasil diganti")
                 return True
+            elif other_account.exists:
+                # facebook - klik "Other accounts"
+                other_account.click()
+                human_sleep(1, 2)
+
+                recycler = d(className="androidx.recyclerview.widget.RecyclerView")
+                view_groups = recycler.child(className="android.view.ViewGroup")
+                total = view_groups.count
+                print(f"    [Switch-FB] Total akun ditemukan: {total}")
+
+                # Kumpulkan semua nama akun dari contentDescription cucu
+                account_names = []
+                for i in range(total):
+                    cucu = view_groups[i].child(className="android.view.ViewGroup")
+                    desc = cucu.info.get("contentDescription", "") or ""
+                    account_names.append(desc)
+                    print(f"    [Switch-FB] Akun index {i}: {desc}")
+
+                # Index 0 = akun yang sedang aktif
+                current_account = account_names[0] if account_names else "Unknown"
+                print(f"    [Switch-FB] Akun terkini: {current_account}")
+
+                # Klik akun berikutnya (index 1) untuk switch
+                if total >= 2:
+                    view_groups[1].click()
+                    human_sleep(3, 5)
+                    print(f"    [Switch-FB] ✓ Berhasil switch ke: {account_names[1]}")
+                    return True
+                else:
+                    print(f"    [Switch-FB] Tidak ada akun lain untuk diganti")
+                    d.press("back")
+                    return False
+            
             else:
                 print(f"    [Switch] Tidak ada akun lain untuk diganti")
                 d.press("back")

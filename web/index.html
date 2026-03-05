@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Social Media Automation Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #0d0f14;
+      --surface:   #151820;
+      --surface2:  #1c2030;
+      --border:    #252a3a;
+      --accent:    #6c63ff;
+      --accent2:   #00d4aa;
+      --danger:    #ff4757;
+      --warn:      #ffa502;
+      --success:   #2ed573;
+      --text:      #e8eaf0;
+      --muted:     #6b7280;
+      --radius:    14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Background decoration ── */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -200px; left: -200px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(108,99,255,.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -200px; right: -200px;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(0,212,170,.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      background: rgba(13,15,20,.7);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: grid; place-items: center;
+      font-size: 20px;
+    }
+    header h1 { font-size: 18px; font-weight: 700; }
+    header span { font-size: 13px; color: var(--muted); }
+    .header-right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+    /* ── Layout ── */
+    main {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 32px 24px;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    @media(max-width:900px){ main{ grid-template-columns:1fr; } }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent);
+    }
+
+    /* ── Device List ── */
+    .device-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .device-toolbar button {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .device-toolbar button:hover { border-color: var(--accent); color: var(--accent); }
+
+    #device-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .device-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      cursor: pointer;
+      transition: all .2s;
+      user-select: none;
+    }
+    .device-item:hover { border-color: var(--accent); }
+    .device-item.selected { border-color: var(--accent); background: rgba(108,99,255,.1); }
+
+    .device-item input[type=checkbox] {
+      width: 16px; height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .device-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg,var(--accent),var(--accent2));
+      border-radius: 8px;
+      display: grid; place-items: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .device-info { flex: 1; min-width: 0; }
+    .device-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .device-serial { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+    .device-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 20px;
+      background: rgba(46,213,115,.15);
+      color: var(--success);
+    }
+
+    .no-device {
+      text-align: center;
+      padding: 32px 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .no-device .icon { font-size: 36px; margin-bottom: 8px; }
+
+    /* ── Platform Pills ── */
+    .platform-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .platform-pill {
+      padding: 10px 8px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      cursor: pointer;
+      text-align: center;
+      transition: all .2s;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .platform-pill .picon { font-size: 22px; display: block; margin-bottom: 4px; }
+    .platform-pill:hover { border-color: var(--accent); }
+    .platform-pill.active {
+      border-color: var(--accent);
+      background: rgba(108,99,255,.15);
+      color: var(--accent);
+    }
+
+    /* ── Input ── */
+    .form-group { margin-bottom: 18px; }
+    label { font-size: 12px; font-weight: 500; color: var(--muted); display: block; margin-bottom: 7px; }
+    input[type=text], input[type=url] {
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      transition: border-color .2s;
+      outline: none;
+    }
+    input:focus { border-color: var(--accent); }
+    .input-hint { font-size: 11px; color: var(--muted); margin-top: 5px; }
+    .input-error { color: var(--danger); }
+    .input-ok    { color: var(--success); }
+
+    /* ── Run Button ── */
+    #run-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, var(--accent), #897fff);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    #run-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(108,99,255,.4); }
+    #run-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: none;
+    }
+    .spinner.show { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── RIGHT PANEL ── */
+    .right-panel { display: flex; flex-direction: column; gap: 20px; }
+
+    /* ── Log Console ── */
+    #log-console {
+      background: #0a0c11;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      height: 340px;
+      overflow-y: auto;
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      scroll-behavior: smooth;
+    }
+    .log-line { padding: 1px 0; }
+    .log-line.info  { color: #8bb4ff; }
+    .log-line.ok    { color: var(--success); }
+    .log-line.error { color: var(--danger); }
+    .log-line.warn  { color: var(--warn); }
+    .log-line.clear { color: var(--muted); }
+    .log-line.done  { color: var(--accent2); font-weight: 600; }
+    .log-empty { color: var(--muted); padding: 60px 0; text-align: center; font-size: 13px; }
+
+    /* ── Results Table ── */
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th {
+      text-align: left;
+      padding: 10px 12px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 12px;
+      border-bottom: 1px solid rgba(255,255,255,.04);
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,.02); }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+    }
+    .badge.success { background: rgba(46,213,115,.15); color: var(--success); }
+    .badge.failed  { background: rgba(255,71,87,.15);  color: var(--danger); }
+    .badge.partial { background: rgba(255,165,2,.15);  color: var(--warn); }
+
+    .serial-mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); }
+
+    /* ── Summary Cards ── */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .summary-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .summary-card .num {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .summary-card .lbl { font-size: 11px; color: var(--muted); }
+    .summary-card.success .num { color: var(--success); }
+    .summary-card.failed  .num { color: var(--danger); }
+    .summary-card.total   .num { color: var(--accent); }
+
+    /* ── Refresh button ── */
+    #refresh-btn {
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    #refresh-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🤖</div>
+  <div>
+    <h1>Automation Dashboard</h1>
+    <span>Social Media Bot — UIAutomator2</span>
+  </div>
+  <div class="header-right">
+    <div class="status-dot"></div>
+    <span style="font-size:12px;color:var(--muted)">Server Online</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- ─── LEFT: Control Panel ─── -->
+  <div style="display:flex;flex-direction:column;gap:20px;">
+
+    <!-- Device Card -->
+    <div class="card">
+      <div class="card-title"><span class="dot"></span> Pilih Device</div>
+      <div class="device-toolbar">
+        <span id="device-count" style="font-size:12px;color:var(--muted)">Memuat...</span>
+        <div style="display:flex;gap:6px;">
+          <button onclick="selectAll()">Pilih Semua</button>
+          <button onclick="deselectAll()">Reset</button>
+          <button onclick="loadDevices()" id="refresh-btn">↻ Refresh</button>
+        </div>
+      </div>
+      <div id="device-list">
+        <div class="no-device"><div class="icon">📱</div>Memuat perangkat...</div>
+      </div>
+    </div>
+
+    <!-- Config Card -->
+    <div class="card">
+      <div class="card-title"><span class="dot"></span> Konfigurasi</div>
+
+      <!-- Platform -->
+      <div class="form-group">
+        <label>PLATFORM TARGET</label>
+        <div class="platform-grid">
+          <div class="platform-pill" data-p="youtube"    onclick="selectPlatform(this)">
+            <span class="picon">▶️</span>YouTube
+          </div>
+          <div class="platform-pill" data-p="instagram"  onclick="selectPlatform(this)">
+            <span class="picon">📸</span>Instagram
+          </div>
+          <div class="platform-pill" data-p="threads"    onclick="selectPlatform(this)">
+            <span class="picon">🧵</span>Threads
+          </div>
+          <div class="platform-pill" data-p="snackvideo" onclick="selectPlatform(this)">
+            <span class="picon">🎵</span>SnackVideo
+          </div>
+          <div class="platform-pill" data-p="facebook"   onclick="selectPlatform(this)">
+            <span class="picon">📘</span>Facebook
+          </div>
+        </div>
+      </div>
+
+      <!-- URL -->
+      <div class="form-group">
+        <label>URL TARGET</label>
+        <input type="url" id="url-input" placeholder="https://..." oninput="onUrlChange()"/>
+        <div class="input-hint" id="url-hint">Masukkan URL sesuai platform yang dipilih</div>
+      </div>
+
+      <!-- Run -->
+      <button id="run-btn" onclick="runAutomation()" disabled>
+        <div class="spinner" id="spinner"></div>
+        <span id="run-label">🚀 Jalankan Automation</span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ─── RIGHT: Output Panel ─── -->
+  <div class="right-panel">
+
+    <!-- Summary -->
+    <div class="summary-grid">
+      <div class="summary-card total">
+        <div class="num" id="sum-total">0</div>
+        <div class="lbl">Total Aksi</div>
+      </div>
+      <div class="summary-card success">
+        <div class="num" id="sum-success">0</div>
+        <div class="lbl">Berhasil</div>
+      </div>
+      <div class="summary-card failed">
+        <div class="num" id="sum-failed">0</div>
+        <div class="lbl">Gagal</div>
+      </div>
+    </div>
+
+    <!-- Log Console -->
+    <div class="card" style="padding:0;">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div class="card-title" style="margin:0"><span class="dot"></span> Live Log</div>
+        <button onclick="clearLog()" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;">Bersihkan</button>
+      </div>
+      <div id="log-console">
+        <div class="log-empty">Belum ada log. Jalankan automation untuk memulai.</div>
+      </div>
+    </div>
+
+    <!-- Results Table -->
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px;"><span class="dot"></span> Hasil Eksekusi</div>
+      <div class="table-wrap">
+        <table id="result-table">
+          <thead>
+            <tr>
+              <th>Tanggal & Jam</th>
+              <th>Device</th>
+              <th>Akun</th>
+              <th>Platform</th>
+              <th>Status</th>
+              <th>Durasi</th>
+            </tr>
+          </thead>
+          <tbody id="result-body">
+            <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px;">Belum ada hasil</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────────
+  let selectedDevices  = new Set();
+  let selectedPlatform = null;
+  let currentJobId     = null;
+  let sseSource        = null;
+  let allDevices       = [];
+
+  // ── Load Devices ──────────────────────────────────────────────────────────
+  async function loadDevices() {
+    const list = document.getElementById('device-list');
+    list.innerHTML = '<div class="no-device"><div class="icon">⏳</div>Mendeteksi perangkat...</div>';
+    document.getElementById('device-count').textContent = 'Memuat...';
+
+    try {
+      const res  = await fetch('/api/devices');
+      const data = await res.json();
+      allDevices = data.devices || [];
+
+      if (allDevices.length === 0) {
+        list.innerHTML = '<div class="no-device"><div class="icon">📵</div>Tidak ada perangkat terdeteksi.<br>Pastikan ADB aktif & device tersambung.</div>';
+        document.getElementById('device-count').textContent = '0 device ditemukan';
+        return;
+      }
+
+      document.getElementById('device-count').textContent = `${allDevices.length} device ditemukan`;
+      list.innerHTML = '';
+
+      allDevices.forEach(dev => {
+        const item = document.createElement('div');
+        item.className = 'device-item' + (selectedDevices.has(dev.serial) ? ' selected' : '');
+        item.dataset.serial = dev.serial;
+        item.innerHTML = `
+          <input type="checkbox" id="cb-${dev.serial}"
+            ${selectedDevices.has(dev.serial) ? 'checked' : ''}
+            onclick="toggleDevice(event, '${dev.serial}')"/>
+          <div class="device-icon">📱</div>
+          <div class="device-info">
+            <div class="device-name">${dev.model}</div>
+            <div class="device-serial">${dev.serial}</div>
+          </div>
+          <div class="device-badge">ONLINE</div>
+        `;
+        item.addEventListener('click', (e) => {
+          if (e.target.tagName !== 'INPUT') {
+            const cb = document.getElementById(`cb-${dev.serial}`);
+            cb.checked = !cb.checked;
+            _applyToggle(dev.serial, cb.checked);
+          }
+        });
+        list.appendChild(item);
+      });
+    } catch (e) {
+      list.innerHTML = `<div class="no-device"><div class="icon">⚠️</div>Gagal memuat: ${e.message}</div>`;
+    }
+    updateRunBtn();
+  }
+
+  function toggleDevice(e, serial) {
+    e.stopPropagation();
+    _applyToggle(serial, e.target.checked);
+  }
+
+  function _applyToggle(serial, checked) {
+    if (checked) selectedDevices.add(serial);
+    else         selectedDevices.delete(serial);
+
+    const item = document.querySelector(`.device-item[data-serial="${serial}"]`);
+    if (item) item.classList.toggle('selected', checked);
+    updateRunBtn();
+  }
+
+  function selectAll()   { allDevices.forEach(d => { selectedDevices.add(d.serial); document.getElementById(`cb-${d.serial}`).checked=true; document.querySelector(`.device-item[data-serial="${d.serial}"]`).classList.add('selected'); }); updateRunBtn(); }
+  function deselectAll() { allDevices.forEach(d => { selectedDevices.delete(d.serial); document.getElementById(`cb-${d.serial}`).checked=false; document.querySelector(`.device-item[data-serial="${d.serial}"]`).classList.remove('selected'); }); updateRunBtn(); }
+
+  // ── Platform ──────────────────────────────────────────────────────────────
+  function selectPlatform(el) {
+    document.querySelectorAll('.platform-pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    selectedPlatform = el.dataset.p;
+    updateUrlHint();
+    updateRunBtn();
+  }
+
+  const URL_EXAMPLES = {
+    youtube   : 'https://www.youtube.com/watch?v=XXXXX',
+    instagram : 'https://www.instagram.com/p/XXXXX/',
+    threads   : 'https://www.threads.net/@user/post/XXXXX',
+    snackvideo: 'https://s.snackvideo.com/p/XXXXX',
+    facebook  : 'https://www.facebook.com/share/p/XXXXX',
+  };
+
+  function updateUrlHint() {
+    const hint = document.getElementById('url-hint');
+    if (selectedPlatform && URL_EXAMPLES[selectedPlatform]) {
+      hint.textContent = `Contoh: ${URL_EXAMPLES[selectedPlatform]}`;
+      hint.className   = 'input-hint';
+    }
+  }
+
+  async function onUrlChange() {
+    if (!selectedPlatform) return;
+    const url  = document.getElementById('url-input').value.trim();
+    const hint = document.getElementById('url-hint');
+    if (!url) { updateUrlHint(); updateRunBtn(); return; }
+
+    const res  = await fetch('/api/validate-url', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ platform: selectedPlatform, url }),
+    });
+    const data = await res.json();
+    hint.textContent = data.valid ? '✓ URL valid' : '✗ ' + data.message;
+    hint.className   = 'input-hint ' + (data.valid ? 'input-ok' : 'input-error');
+    updateRunBtn();
+  }
+
+  function updateRunBtn() {
+    const url   = document.getElementById('url-input').value.trim();
+    const ready = selectedDevices.size > 0 && selectedPlatform && url;
+    document.getElementById('run-btn').disabled = !ready;
+  }
+
+  // ── Run ───────────────────────────────────────────────────────────────────
+  async function runAutomation() {
+    const url     = document.getElementById('url-input').value.trim();
+    const devices = Array.from(selectedDevices);
+
+    if (!selectedPlatform || !url || devices.length === 0) return;
+
+    // Reset log & table
+    clearLog();
+    document.getElementById('result-body').innerHTML =
+      '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">⏳ Sedang berjalan...</td></tr>';
+    document.getElementById('sum-total').textContent   = '0';
+    document.getElementById('sum-success').textContent = '0';
+    document.getElementById('sum-failed').textContent  = '0';
+
+    setRunning(true);
+
+    try {
+      const res  = await fetch('/api/run', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ platform: selectedPlatform, url, devices }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        appendLog('[ERROR] ' + (data.error || 'Gagal memulai job'), 'error');
+        setRunning(false);
+        return;
+      }
+
+      currentJobId = data.job_id;
+      appendLog(`[JOB] Dimulai — ID: ${currentJobId}`, 'info');
+      appendLog(`[INFO] Platform: ${selectedPlatform.toUpperCase()} | Devices: ${devices.join(', ')}`, 'info');
+      startSSE(currentJobId);
+    } catch (e) {
+      appendLog('[ERROR] ' + e.message, 'error');
+      setRunning(false);
+    }
+  }
+
+  // ── SSE ───────────────────────────────────────────────────────────────────
+  function startSSE(jobId) {
+    if (sseSource) sseSource.close();
+    sseSource = new EventSource(`/api/stream/${jobId}`);
+    const tbody = document.getElementById('result-body');
+    tbody.innerHTML = '';
+    let hasResult = false;
+    let success = 0, failed = 0;
+
+    sseSource.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+
+      if (msg.type === 'log') {
+        const text = msg.data;
+        let cls = '';
+        if (text.includes('[ERROR]') || text.includes('FAILED')) cls = 'error';
+        else if (text.includes('[DONE]') || text.includes('SUCCESS')) cls = 'ok';
+        else if (text.includes('[CLEAR]') || text.includes('[SWITCH]')) cls = 'clear';
+        else if (text.includes('[CSV]') || text.includes('[JOB]')) cls = 'done';
+        else if (text.includes('[INFO]')) cls = 'info';
+        appendLog(text, cls);
+      }
+
+      if (msg.type === 'result') {
+        const r = msg.data;
+        if (!hasResult) { tbody.innerHTML = ''; hasResult = true; }
+
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('id-ID') + ' ' + now.toLocaleTimeString('id-ID');
+        const badge   = r.status === 'SUCCESS' ? 'success' : (r.status === 'PARTIAL' ? 'partial' : 'failed');
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-size:11px;color:var(--muted)">${dateStr}</td>
+          <td><span class="serial-mono">${r.device}</span></td>
+          <td>${r.account}</td>
+          <td style="text-transform:capitalize">${r.platform}</td>
+          <td><span class="badge ${badge}">${r.status}</span></td>
+          <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${r.duration}s</td>
+        `;
+        tbody.insertBefore(tr, tbody.firstChild);
+
+        if (r.status === 'SUCCESS') success++;
+        else failed++;
+        const total = success + failed;
+        document.getElementById('sum-total').textContent   = total;
+        document.getElementById('sum-success').textContent = success;
+        document.getElementById('sum-failed').textContent  = failed;
+      }
+
+      if (msg.type === 'done') {
+        appendLog('✓ Semua perangkat selesai!', 'done');
+        sseSource.close();
+        setRunning(false);
+        if (!hasResult) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px">Tidak ada hasil</td></tr>';
+        }
+      }
+    };
+
+    sseSource.onerror = () => {
+      appendLog('[WARN] Koneksi stream terputus', 'warn');
+      sseSource.close();
+      setRunning(false);
+    };
+  }
+
+  // ── Log Helpers ───────────────────────────────────────────────────────────
+  function appendLog(text, cls='') {
+    const console_ = document.getElementById('log-console');
+    const isEmpty  = console_.querySelector('.log-empty');
+    if (isEmpty) isEmpty.remove();
+
+    const div = document.createElement('div');
+    div.className  = 'log-line ' + cls;
+    div.textContent = text;
+    console_.appendChild(div);
+    console_.scrollTop = console_.scrollHeight;
+  }
+
+  function clearLog() {
+    document.getElementById('log-console').innerHTML =
+      '<div class="log-empty">Log dibersihkan.</div>';
+  }
+
+  function setRunning(running) {
+    document.getElementById('run-btn').disabled = running;
+    document.getElementById('spinner').classList.toggle('show', running);
+    document.getElementById('run-label').textContent = running ? 'Berjalan...' : '🚀 Jalankan Automation';
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  loadDevices();
+  setInterval(loadDevices, 30000); // Auto-refresh device list tiap 30 detik
+</script>
+</body>
+</html>
