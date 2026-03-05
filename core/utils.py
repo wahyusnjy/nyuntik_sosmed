@@ -129,13 +129,14 @@ def open_url(d: u2.Device, platform: str, url: str) -> bool:
     cfg     = PLATFORM_CONFIG[platform]
     package = cfg["package"]
     try:
-        d.app_start(
-            package,
-            activity="android.intent.action.VIEW",
-            action="android.intent.action.VIEW",
-            data=url,
-            stop=False,
-        )
+        cmd = f"am start -a android.intent.action.VIEW -d '{url}'"
+        d.shell(cmd)
+        # d.app_start(
+        #     package,
+        #     action="android.intent.action.VIEW",
+        #     data=url,
+        #     stop=False,
+        # )
         human_sleep(3, 5)
         return True
     except Exception:
