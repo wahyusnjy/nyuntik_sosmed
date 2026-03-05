@@ -92,6 +92,13 @@ def get_current_username(d: u2.Device, platform: str) -> str:
     print(f"     Membuka Ulang {platform}...")
     d.app_start(cfg["package"])
     human_sleep(2, 4)
+    skip_btn = d(textContains="Skip")
+    if skip_btn.exists:
+        print(f"     Ketemu Skip button otw click {platform}...")
+        time.sleep(2)
+        skip_btn.click()
+    else :
+        print(f"     Tidak ada gangguan lesgoo {platform}...")
     try:
         profile_tab = find_element(d, cfg["profile_tab_id"], timeout=5)
         alternative_profile_tab = find_by_desc_contains(d, cfg["profile_tab_id"], timeout=5)
