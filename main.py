@@ -188,22 +188,29 @@ def main():
         "facebook"  : "https://www.facebook.com/permalink.php?story_fbid=XXXXX",
     }
 
-    # ── Input platform & URL ───────────────────────────────────────────────────
-    if len(sys.argv) == 3:
-        platform = sys.argv[1].strip().lower()
-        url      = sys.argv[2].strip()
+    # ── Parse sys.argv ─────────────────────────────────────────────────────────
+    # Format: python main.py <platform> <url> [device_id]
+    target_device = None
+
+    if len(sys.argv) >= 3:
+        platform      = sys.argv[1].strip().lower()
+        url           = sys.argv[2].strip()
+        target_device = sys.argv[3].strip() if len(sys.argv) >= 4 else None
     else:
         print(f"\n  Platform : {' | '.join(platforms)}")
-        print(f"  Format   : <platform> <url>")
-        print(f"  Contoh   : youtube https://www.youtube.com/watch?v=XXXXX")
+        print(f"  Format   : <platform> <url> [device_id]")
+        print(f"  Contoh   : instagram https://www.instagram.com/p/XXX/")
+        print(f"             instagram https://www.instagram.com/p/XXX/ emulator-5554")
         print(f"  {'─'*51}")
         while True:
             raw   = input("  >> ").strip()
-            parts = raw.split(maxsplit=1)
-            if len(parts) == 2:
-                platform, url = parts[0].lower(), parts[1]
+            parts = raw.split(maxsplit=2)
+            if len(parts) >= 2:
+                platform = parts[0].lower()
+                url      = parts[1]
+                target_device = parts[2] if len(parts) == 3 else None
                 break
-            print("  [!] Format salah. Contoh: youtube https://...")
+            print("  [!] Format salah. Contoh: instagram https://...")
 
     # ── Validasi platform ──────────────────────────────────────────────────────
     if platform not in HANDLERS:
@@ -219,16 +226,30 @@ def main():
 
     # ── Deteksi devices ────────────────────────────────────────────────────────
     print("\n  Mendeteksi perangkat ADB...")
-    devices = detect_devices()
-    if not devices:
+    all_devices = detect_devices()
+    if not all_devices:
         print("  [ERROR] Tidak ada perangkat terdeteksi.")
         sys.exit(1)
+
+    print(f"  Perangkat tersedia: {', '.join(all_devices)}")
+
+    # ── Filter device jika device_id diberikan ─────────────────────────────────
+    if target_device:
+        if target_device not in all_devices:
+            print(f"\n  [ERROR] Device '{target_device}' tidak ditemukan.")
+            print(f"  Tersedia: {', '.join(all_devices)}")
+            sys.exit(1)
+        devices = [target_device]
+        print(f"  Target device: {target_device}")
+    else:
+        devices = all_devices
+        print(f"  Target device: semua ({len(devices)} perangkat)")
 
     # ── Konfirmasi ─────────────────────────────────────────────────────────────
     print(f"\n  {'─'*51}")
     print(f"  Platform  : {platform.upper()}")
     print(f"  URL       : {url}")
-    print(f"  Perangkat : {len(devices)} → {', '.join(devices)}")
+    print(f"  Perangkat : {', '.join(devices)}")
     print(f"  {'─'*51}")
     if input("\n  Jalankan? (y/n): ").strip().lower() != "y":
         print("  Dibatalkan.")
@@ -264,3 +285,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
