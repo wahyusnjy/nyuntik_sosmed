@@ -24,7 +24,7 @@ _CFG = PLATFORM_CONFIG["facebook"]
 MAX_SCROLL_ATTEMPTS = 20
 
 # Description persis tombol Like Facebook (belum di-like)
-_LIKE_DESC   = ["Like", "reaction"]
+_LIKE_DESC   = ["Like", "reaction","reactions"]
 
 # Description saat sudah di-like (FB ubah dari "Like" → "Liked")
 _LIKED_DESC  = "reaction"
@@ -59,20 +59,19 @@ def do_like(d: u2.Device) -> bool:
                 print(f"    [FB-Like] ✓ Like berhasil (scroll ke-{attempts})")
                 human_sleep()
                 return True
+            else : 
+                print(f"    [FB-Like] x Not found button desc contains {like_desc})")
 
         # Fallback: cari via descriptionContains (partial) atau resourceId
-        like_el = find_element(d, _CFG["like_id"], timeout=1)
-        if like_el is not None:
-            try:
-                info = like_el.info
-                desc = info.get("contentDescription", "")
-                # Sudah di-like kalau desc-nya mulai dengan "Liked"
-                if desc.lower().startswith("liked"):
-                    print(f"    [FB-Like] Sudah di-like (resourceId check), skip.")
-                    return True
-            except Exception:
-                pass
-            human_click(d, like_el)
+            like_el = d(description="Reel details").child(className="android.widget.Button", instance=0)
+            info = like_el.info
+            clickable_like_fb = info.get("clickable")
+            # Sudah di-like kalau desc-nya mulai dengan "Liked"
+            if clickable_like_fb:
+                print(f"    [FB-Like] Button ditemukan, Try to click button")
+                like_el.click()
+                time.sleep(2)
+                return True
             print(f"    [FB-Like] ✓ Like berhasil via resourceId (scroll ke-{attempts})")
             human_sleep()
             return True
@@ -80,8 +79,7 @@ def do_like(d: u2.Device) -> bool:
         if attempts >= MAX_SCROLL_ATTEMPTS:
             print(f"    [FB-Like] Tombol Like tidak ditemukan setelah {attempts} scroll.")
             return False
-
-        d.swipe(0.5, 0.75, 0.5, 0.35, duration=0.5)
+        
         time.sleep(random.uniform(0.8, 1.5))
 
 
@@ -114,7 +112,7 @@ def do_comment(d: u2.Device) -> bool:
         # ── Cari tombol Comment → klik → cari box ──────────────────────────
         comment_btn = find_element(d, _CFG["comment_id"], timeout=1)
         if comment_btn is None:
-            for btn_desc in ["Comment", "Comment button"]:
+            for btn_desc in ["Comment", "Comment button","comments"]:
                 btn = d(description=btn_desc)
                 if btn.exists:
                     comment_btn = btn
