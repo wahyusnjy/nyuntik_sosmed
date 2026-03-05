@@ -86,7 +86,7 @@ PLATFORM_CONFIG = {
         "comment_id":     "com.facebook.katana:id/comment_button",
         "comment_box_id": "com.facebook.katana:id/composer_text_input",
         "post_btn_id":    "com.facebook.katana:id/send_button",
-        "profile_tab_id": "Profile, tab 4 of 4",
+        "profile_tab_id": "Go to profile",
         "xpath_username" : "//androidx.recyclerview.widget.RecyclerView//android.view.ViewGroup[4]//android.view.View[1]",
         "switch_acc_id":  "com.facebook.katana:id/account_switcher_chevron",
         "switch_acc_xpath" : "//androidx.recyclerview.widget.RecyclerView//android.view.ViewGroup[4]//android.widget.Button[1]",
