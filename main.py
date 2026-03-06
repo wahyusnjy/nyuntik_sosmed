@@ -26,7 +26,7 @@ except ImportError:
 from core.config   import PLATFORM_CONFIG
 from core.utils    import (
     clear_recent_apps, open_url, get_current_username,
-    do_switch_account, human_sleep
+    do_switch_account, human_sleep, ensure_enough_ram
 )
 from core.reporter import print_report
 
@@ -109,7 +109,10 @@ def process_device(serial: str, platform: str, url: str) -> list[dict]:
                 print(f"  [INFO] Akun aktif: {current_account}")
                 human_sleep(1, 2)
 
-            # 1b. Buka URL target via Intent
+            # 1b. Cek RAM sebelum buka URL
+            ensure_enough_ram(d, keep_package=cfg["package"])
+
+            # 1c. Buka URL target via Intent
             print(f"  [1/4] Membuka URL di {platform}...")
             if not open_url(d, platform, url):
                 raise RuntimeError("Gagal membuka URL")

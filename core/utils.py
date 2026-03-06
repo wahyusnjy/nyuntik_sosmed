@@ -7,6 +7,7 @@ Fungsi-fungsi utility yang dipakai semua platform.
 
 import time
 import random
+import shlex
 
 import uiautomator2 as u2
 
@@ -101,15 +102,18 @@ def get_current_username(d: u2.Device, platform: str) -> str:
         print(f"     Tidak ada gangguan lesgoo {platform}...")
     try:
         profile_tab = find_element(d, cfg["profile_tab_id"], timeout=5)
-        alternative_profile_tab = find_by_desc_contains(d, cfg["profile_tab_id"], timeout=5)
+        profile_tab_desc = find_by_desc(d,cfg["profile_tab_id"],timeout=5)
         if profile_tab:
             print(f"     Find tab profile  on primary tab...")
             human_click(d, profile_tab)
             human_sleep(1.5, 3)
-        elif alternative_profile_tab :
-            print(f"     Find tab profile on alternative 1 ...")
-            human_click(d, alternative_profile_tab)
+        elif profile_tab_desc : 
+            print(f"     Find tab profile by desc tab...")
+            human_click(d, profile_tab_desc)
             human_sleep(1.5, 3)
+        
+
+
 
         username_el = find_element(d, cfg.get("switch_acc_id"), timeout=5)
         username_el_xpath = find_by_xpath(d, cfg.get("switch_acc_id"), timeout=5)
@@ -124,24 +128,82 @@ def get_current_username(d: u2.Device, platform: str) -> str:
     return "Unknown"
 
 
+# ─── Memory Management ───────────────────────────────────────────────────────
+
+RAM_THRESHOLD_MB = 250  # Batas minimal RAM (MB) sebelum buka URL
+
+# App-app peminum RAM yang boleh di-stop saat darurat
+_RAM_HOGS = [
+    "com.google.android.apps.messaging",
+    "com.google.android.googlequicksearchbox",
+    "com.android.vending",
+    "com.whatsapp",
+    "com.whatsapp.w4b",
+]
+
+
+def get_free_memory_mb(d: u2.Device) -> int:
+    """Ambil sisa RAM bebas (MB) dari perangkat."""
+    try:
+        out = d.shell("free -m").output
+        # Baris ke-2 (Mem:), kolom ke-4 = 'free'
+        free_ram = int(out.splitlines()[1].split()[3])
+        return free_ram
+    except Exception:
+        return 0
+
+
+def deep_cleanup(d: u2.Device, keep_package: str = None):
+    """Stop app-app pemakan RAM, trim cache sistem.
+
+    Args:
+        d: device uiautomator2
+        keep_package: package yang TIDAK boleh di-stop (app target kita)
+    """
+    print("  [RAM] 🧹 RAM kritis! Memulai pembersihan paksa...")
+    for pkg in _RAM_HOGS:
+        if pkg != keep_package:
+            try:
+                d.app_stop(pkg)
+            except Exception:
+                pass
+    try:
+        d.shell("pm trim-caches 4096M")
+    except Exception:
+        pass
+    print("  [RAM] ✅ Pembersihan selesai.")
+
+
+def ensure_enough_ram(d: u2.Device, keep_package: str = None,
+                      threshold_mb: int = RAM_THRESHOLD_MB) -> int:
+    """Cek RAM; jika kurang dari threshold, jalankan deep_cleanup.
+
+    Returns:
+        Sisa RAM (MB) setelah pengecekan (dan opsional cleanup).
+    """
+    free_mb = get_free_memory_mb(d)
+    print(f"  [RAM] 📊 Sisa RAM saat ini: {free_mb} MB")
+    if free_mb < threshold_mb:
+        deep_cleanup(d, keep_package=keep_package)
+        time.sleep(2)  # Beri napas sistem
+        free_mb = get_free_memory_mb(d)
+        print(f"  [RAM] 📊 Sisa RAM setelah cleanup: {free_mb} MB")
+    return free_mb
+
+
 def open_url(d: u2.Device, platform: str, url: str) -> bool:
     """Buka URL langsung via ADB Intent ke aplikasi target."""
     cfg     = PLATFORM_CONFIG[platform]
     package = cfg["package"]
     try:
-        cmd = f"am start -a android.intent.action.VIEW -d '{url}'"
+        quoted_url = shlex.quote(url)
+        cmd = f"am start -S -a android.intent.action.VIEW -d '{quoted_url} {package}'"
         d.shell(cmd)
-        # d.app_start(
-        #     package,
-        #     action="android.intent.action.VIEW",
-        #     data=url,
-        #     stop=False,
-        # )
-        human_sleep(3, 5)
+        human_sleep(1, 3)
         return True
     except Exception:
         try:
-            d.shell(f"am start -a android.intent.action.VIEW -d '{url}' {package}")
+            d.shell(f"am start -S -a android.intent.action.VIEW -d '{quoted_url}' {package}")
             human_sleep(3, 5)
             return True
         except Exception as e:
